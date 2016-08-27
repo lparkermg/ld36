@@ -72,10 +72,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Entities\LevelDataHolder.cs" />
     <Compile Include="Assets\Scripts\Entities\Settings.cs" />
     <Compile Include="Assets\Scripts\Helpers\FileIo.cs" />
+    <Compile Include="Assets\Scripts\Helpers\LevelHelper.cs" />
     <Compile Include="Assets\Scripts\Helpers\SceneChangers.cs" />
     <Compile Include="Assets\Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\GameplayManager.cs" />
     <Compile Include="Assets\Scripts\Managers\MainMenuManager.cs" />
     <Compile Include="Assets\Scripts\Managers\Singleton.cs" />
     <Compile Include="Assets\Scripts\Setups\GameSetup.cs" />
