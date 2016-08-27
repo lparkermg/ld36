@@ -43,6 +43,11 @@ public class MainMenuManager : MonoBehaviour {
         GameManager.Instance.SaveSettings();
     }
 
+    public void StartButtonClicked()
+    {
+        GameManager.Instance.StartGame();
+    }
+
     public void DisplayOptionsMenu()
     {
         HideMainMenu();
