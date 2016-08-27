@@ -15,7 +15,9 @@ public class MainMenuManager : MonoBehaviour {
     private bool _isDirty;
 	// Use this for initialization
 	void Start () {
+        GameManager.Instance.LoadSettings();
         ShowMainMenu();
+        
 	}
 	
 	// Update is called once per frame
@@ -80,6 +82,9 @@ public class MainMenuManager : MonoBehaviour {
 
     private void ShowOptionsMenu()
     {
+        MusicVolumeSlider.value = GameManager.Instance.MusicVolume;
+        SfxVolumeSlider.value = GameManager.Instance.SfxVolume;
+
         OptionsMenuGroup.alpha = 1.0f;
         OptionsMenuGroup.blocksRaycasts = true;
         OptionsMenuGroup.interactable = true;
@@ -95,6 +100,8 @@ public class MainMenuManager : MonoBehaviour {
 
     private void ShowMainMenu()
     {
+        if (_isDirty)
+            GameManager.Instance.LoadSettings();
         MainMenuGroup.alpha = 1.0f;
         MainMenuGroup.blocksRaycasts = true;
         MainMenuGroup.interactable = true;

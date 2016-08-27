@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
-
+using Helpers.Filesystem;
+using Entities;
 public class GameManager : Singleton<GameManager> {
     protected GameManager() { }
 
@@ -26,11 +27,16 @@ public class GameManager : Singleton<GameManager> {
     #region Setting IO etc.
     public void LoadSettings()
     {
+        var loadedSettings = FileIo.LoadSettingsOrDefault();
+        MusicVolume = loadedSettings.MusicVolume;
+        SfxVolume = loadedSettings.SfxVolume;
         IsDirty = false;
     }
 
     public void SaveSettings()
     {
+        var settings = new Settings(MusicVolume,SfxVolume);
+        FileIo.SaveSettings(settings);
         IsDirty = false;
     }
 
