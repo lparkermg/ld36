@@ -14,13 +14,12 @@ public class GameManager : Singleton<GameManager> {
 
     public void Initialise()
     {
-        //TODO: Load Settings etc here on initial load.
         LoadSettings();
     }
     
     public void StartGame()
     {
-        //TODO: Load the Gameplay Manager with an Initialiser.
+        
         LoadScene(2);
     }
 
