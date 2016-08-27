@@ -7,7 +7,12 @@ public class MainMenuManager : MonoBehaviour {
     public CanvasGroup MainMenuGroup;
     public CanvasGroup OptionsMenuGroup;
 
+    public Slider MusicVolumeSlider;
+    public Slider SfxVolumeSlider;
+
     public Button SaveButton;
+
+    private bool _isDirty;
 	// Use this for initialization
 	void Start () {
         ShowMainMenu();
@@ -26,8 +31,16 @@ public class MainMenuManager : MonoBehaviour {
 
     public void BackButtonClicked()
     {
+        if (_isDirty)
+            GameManager.Instance.LoadSettings();
         HideOptionsMenu();
         ShowMainMenu();
+        
+    }
+
+    public void SaveButtonClicked()
+    {
+        GameManager.Instance.SaveSettings();
     }
 
     public void DisplayOptionsMenu()
@@ -42,6 +55,17 @@ public class MainMenuManager : MonoBehaviour {
         ShowMainMenu();
     }
 
+    public void MusicSliderUpdate()
+    {
+        GameManager.Instance.UpdateMusicVolume(MusicVolumeSlider.value);
+    }
+
+    public void SfxSliderUpdate()
+    {
+        GameManager.Instance.UpdateSfxVolume(SfxVolumeSlider.value);
+    }
+
+    #region Private Helper Functions
     private void HideOptionsMenu()
     {
         OptionsMenuGroup.alpha = 0.0f;
@@ -73,7 +97,8 @@ public class MainMenuManager : MonoBehaviour {
 
     private void CheckIsDirty()
     {
-        //TODO: Make IsDirty in GameManager for showing any changes are made to the settings and need saving.
-        SaveButton.interactable = false;
+        _isDirty = GameManager.Instance.IsDirty;
+        SaveButton.interactable = _isDirty;
     }
+    #endregion
 }
