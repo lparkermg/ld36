@@ -11,6 +11,7 @@ public class GameplayManager : MonoBehaviour {
 
     private LevelDataHolder _levelDataHolder;
     private GameObject[,] _tileLocations;
+
     #region Spawner Data
     private Vector3?[,] _redSpawnerLocations;
     private Vector3?[,] _blueSpawnerLocations;
@@ -18,10 +19,11 @@ public class GameplayManager : MonoBehaviour {
     private int _blueSpawnerCount;
     #endregion
 
-    //Minion Location Stuff
-    
-    
+    //UI Stuff
+    public GameplayUIManager UIManager;
 
+    public GameObject FightMask;
+    
     //Score Keeping
     public int CurrentRound = 1;
     public int TotalRounds = 5;
@@ -74,6 +76,7 @@ public class GameplayManager : MonoBehaviour {
     {
         var layoutNotDone = false;
         _cursor.SetActive(false);
+        UIManager.UpdateAll(BlueTotalPoints, RedTotalPoints, CurrentRound);
         while (!layoutNotDone)
         {
             var matched = 0;
@@ -101,7 +104,7 @@ public class GameplayManager : MonoBehaviour {
         LevelsDone.Add(_levelDataHolder.LastRandomLayout);
         StartCoroutine(LoadLevelTiles());
         StartCoroutine(SpawnMinions());
-        var maxCharge = 1.0f / (float)CurrentRound;
+        var maxCharge = 2.0f / (float)CurrentRound;
         //maxCharge = 0.1f;
         _roundDone = false;
         StartCoroutine(AIProcess(maxCharge));
@@ -171,6 +174,15 @@ public class GameplayManager : MonoBehaviour {
         GameplayDataManager.EnemyMinionObjects = new Dictionary<string, GameObject>();
         GameplayDataManager.EnemyFighting = new List<string>();
 
+        var excessMasks = GameObject.FindGameObjectsWithTag("FightMask");
+
+        if(excessMasks.Length > 0)
+        {
+            for(var i = excessMasks.Length; i >= 0; i--)
+            {
+                Destroy(excessMasks[0]);
+            }
+        }
         yield return null;
     }
 
@@ -196,7 +208,6 @@ public class GameplayManager : MonoBehaviour {
                     blueMinion.name = botId;
                     blueMinion.GetComponent<MinionBot>().InitBot();
                     blueMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
-                    //TODO: Set location in minion class when it's made.
                     GameplayDataManager.FriendlyMinionObjects.Add(botId, blueMinion);
                     placedBlue = true;
                     placedAmountBlue++;
@@ -216,7 +227,6 @@ public class GameplayManager : MonoBehaviour {
                     redMinion.name = botId;
                     redMinion.GetComponent<MinionBot>().InitBot();
                     redMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
-                    //TODO: Set location in minion class when its made.
                     GameplayDataManager.EnemyMinionObjects.Add(botId,redMinion);
                     placedRed = true;
                     placedAmountRed++;
@@ -243,7 +253,7 @@ public class GameplayManager : MonoBehaviour {
 
     private void AddSpawnLocation(int x, int y,int type)
     {
-        var spawner = new Vector3((float)x, 1.0f, (float)y);
+        var spawner = new Vector3((float)x, 0.5f, (float)y);
         if(type == 1)
         {
             _blueSpawnerLocations[x, y] = spawner;
@@ -340,7 +350,7 @@ public class GameplayManager : MonoBehaviour {
             {
                 _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
             }
-            minionBot.gameObject.transform.position = new Vector3((float)x,1.0f,(float)y);
+            minionBot.gameObject.transform.position = new Vector3((float)x,0.5f,(float)y);
             minionBot.UpdatePosition(x, y);
 
             Debug.Log(GameplayDataManager.MinionLocations[x, y]);
@@ -354,7 +364,9 @@ public class GameplayManager : MonoBehaviour {
                     GameplayDataManager.FightHere[x, y] = true;
                     GameplayDataManager.FriendlyFighting.Add(minionBot.gameObject.name);
                     GameplayDataManager.EnemyFighting.Add(GameplayDataManager.MinionLocations[x, y]);
-                    StartCoroutine(Fight(minionBot.gameObject.name, GameplayDataManager.MinionLocations[x, y], x, y, true));
+                    GameObject fightMask = GameObject.Instantiate(FightMask, new Vector3(x, 0.5f, y), FightMask.transform.rotation) as GameObject;
+                    fightMask.transform.SetParent(GameObject.Find(minionBot.gameObject.name).transform);
+                    StartCoroutine(Fight(minionBot.gameObject.name, GameplayDataManager.MinionLocations[x, y], x, y, true,fightMask));
                     return;
                 }
                 else if(GameplayDataManager.MinionLocations[x,y].Contains("Blue") && ai)
@@ -368,7 +380,9 @@ public class GameplayManager : MonoBehaviour {
                     }
                     GameplayDataManager.EnemyFighting.Add(minionBot.gameObject.name);
                     GameplayDataManager.FriendlyFighting.Add(GameplayDataManager.MinionLocations[x, y]);
-                    StartCoroutine(Fight( GameplayDataManager.MinionLocations[x, y], minionBot.gameObject.name, x, y, false));
+                    GameObject fightMask = GameObject.Instantiate(FightMask, new Vector3(x, 0.5f, y), FightMask.transform.rotation) as GameObject;
+                    fightMask.transform.SetParent(GameObject.Find(minionBot.gameObject.name).transform);
+                    StartCoroutine(Fight( GameplayDataManager.MinionLocations[x, y], minionBot.gameObject.name, x, y, false,fightMask));
                     return;
                 }
                 else
@@ -382,10 +396,6 @@ public class GameplayManager : MonoBehaviour {
                 GameplayDataManager.MinionLocations[oldX, oldY] = null;
                 GameplayDataManager.MinionLocations[x, y] = minionBot.gameObject.name;
             }
-            //If the minion is moving on to an enemy minion then start a fight Coroutine and go until it's finished..
-            //Also make that tile unselectable and remove the selection object.
-            //Update the Level Data and minion locations with new ones based on who won the fight.
-
 
         }
     }
@@ -465,7 +475,7 @@ public class GameplayManager : MonoBehaviour {
     #endregion
 
     #region Fight Stuff
-    IEnumerator Fight(string blueName, string redName, int x, int y, bool playerAttackFirst)
+    IEnumerator Fight(string blueName, string redName, int x, int y, bool playerAttackFirst,GameObject fightMask)
     {
         var fightDone = false;
         var currentTime = 0.0f;
@@ -531,7 +541,9 @@ public class GameplayManager : MonoBehaviour {
 
                 yield return null;
             }
-            GameplayDataManager.FightHere[x, y] = false;
+
+            Destroy(fightMask);
+
         }
         GameplayDataManager.FightHere[x, y] = false;
         
@@ -618,10 +630,12 @@ public class GameplayManager : MonoBehaviour {
         if (forPlayer)
         {
             BlueTotalPoints += amount;
+            UIManager.UpdatePlayerPoints(BlueTotalPoints);
         }
         else
         {
             RedTotalPoints += amount;
+            UIManager.UpdateComputerPoints(RedTotalPoints);
         }
     }
     

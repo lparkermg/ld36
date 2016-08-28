@@ -82,6 +82,7 @@
     <Compile Include="Assets\Scripts\Managers\GameManager.cs" />
     <Compile Include="Assets\Scripts\Managers\GameplayDataManager.cs" />
     <Compile Include="Assets\Scripts\Managers\GameplayManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\GameplayUIManager.cs" />
     <Compile Include="Assets\Scripts\Managers\InputManager.cs" />
     <Compile Include="Assets\Scripts\Managers\MainMenuManager.cs" />
     <Compile Include="Assets\Scripts\Managers\Singleton.cs" />
