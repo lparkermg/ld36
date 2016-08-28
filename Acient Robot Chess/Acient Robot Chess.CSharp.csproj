@@ -80,6 +80,7 @@
     <Compile Include="Assets\Scripts\Helpers\LevelHelper.cs" />
     <Compile Include="Assets\Scripts\Helpers\SceneChangers.cs" />
     <Compile Include="Assets\Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\GameplayDataManager.cs" />
     <Compile Include="Assets\Scripts\Managers\GameplayManager.cs" />
     <Compile Include="Assets\Scripts\Managers\InputManager.cs" />
     <Compile Include="Assets\Scripts\Managers\MainMenuManager.cs" />
