@@ -61,6 +61,7 @@ public class GameplayManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         InputManager.CheckInput();
+        CheckRemainingMinions();
         //Auto change round for testing.
         if (Input.GetKeyUp(KeyCode.N))
         {
@@ -272,7 +273,7 @@ public class GameplayManager : MonoBehaviour {
             else
             {
                 if(_selectedMinionName != "None")
-                    TryMoveMinion(x, y);
+                    TryMoveMinion(x, y,false,_selectedMinion.GetComponent<MinionBot>());
             }
         }
 
@@ -309,25 +310,40 @@ public class GameplayManager : MonoBehaviour {
         }
     }
 
-    public void TryMoveMinion(int x, int y)
+    public void TryMoveMinion(int x, int y,bool ai,MinionBot minionBot)
     {
-        var canMove = CanMoveHere(x, y);
+        var canMove = CanMoveHere(x, y,ai);
 
         if (canMove)
         {
-            var minionBot = _selectedMinion.GetComponent<MinionBot>();
             var oldX = minionBot.X;
             var oldY = minionBot.Y;
 
             //Move the selected minion object.
             _selectedMinion.transform.position = new Vector3((float)x,1.0f,(float)y);
             _selectedMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
+
+            if(_minionLocations[x,y] != null)
+            {
+                if (_minionLocations[x, y].Contains("Red") && !ai)
+                {
+                    StartCoroutine(Fight(minionBot.gameObject.name, _minionLocations[x, y], x, y, true));
+                }
+                else if(_minionLocations[x,y].Contains("Blue") && ai)
+                {
+                    StartCoroutine(Fight(minionBot.gameObject.name, _minionLocations[x, y], x, y, false));
+                }
+            }
             //If the minion is moving on to an enemy minion then start a fight Coroutine and go until it's finished..
             //Also make that tile unselectable and remove the selection object.
             //Update the Level Data and minion locations with new ones based on who won the fight.
+
             _minionLocations[oldX, oldY] = null;
             _minionLocations[x, y] = _selectedMinionName;
-            _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+            if (!ai)
+            {
+                _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+            }
         }
     }
 
@@ -347,13 +363,13 @@ public class GameplayManager : MonoBehaviour {
         _minionLocations[newX, newY] = name;
     }
 
-    private bool CanMoveHere(int x, int y)
+    private bool CanMoveHere(int x, int y,bool ai)
     {
         if (_levelData[x,y] > 2)
             return false;
 
-        if(_minionLocations[x,y] != null)
-            if (_minionLocations[x, y].Contains("Blue"))
+        if (_minionLocations[x, y] != null)
+            if (_minionLocations[x, y].Contains("Blue") && !ai || _minionLocations[x,y].Contains("Red") && ai)
                 return false;
 
         if (_fightHere[x, y])
@@ -372,11 +388,13 @@ public class GameplayManager : MonoBehaviour {
         _minionLocations[x, y] = name;
         if (name.Contains("Blue"))
         {
+            Destroy(FriendlyMinionObjects[name]);
             FriendlyMinionObjects.Remove(name);
-            IncrementPoints(true, 2);
+            IncrementPoints(false, 2);
         }
         else if (name.Contains("Red"))
         {
+            Destroy(EnemyMinionObjects[name]);
             EnemyMinionObjects.Remove(name);
             IncrementPoints(true, 2);
         }
@@ -399,6 +417,65 @@ public class GameplayManager : MonoBehaviour {
             IncrementPoints(true, 10);
             NextRound();
         }
+    }
+    #endregion
+
+    #region Fight Stuff
+    IEnumerator Fight(string blueName, string redName, int x, int y, bool playerAttackFirst)
+    {
+        var fightDone = false;
+        var currentTime = 0.0f;
+        var timePerRound = 0.5f;
+
+        var blueMinion = FriendlyMinionObjects[blueName].GetComponent<MinionBot>();
+        var redMinion = EnemyMinionObjects[redName].GetComponent<MinionBot>();
+
+        Debug.Log("FIGHT FIGHT FIGHT");
+        _fightHere[x, y] = true;
+        var isBlueRound = playerAttackFirst;
+        while (!fightDone)
+        {
+            if (currentTime >= timePerRound)
+            {
+                if (isBlueRound)
+                {
+                    var dmg = blueMinion.Attack();
+                    Debug.Log("Blue dmg: " + dmg);
+                    var dead = redMinion.TakeDamage(dmg);
+                    if (dead)
+                    {
+                        _minionLocations[x, y] = blueMinion.gameObject.name;
+                        fightDone = true;
+                        Debug.Log("Blue Won");
+                    }
+                    currentTime = 0.0f;
+                    isBlueRound = false;
+                }
+                else
+                {
+                    var dmg = redMinion.Attack();
+                    Debug.Log("Red dmg: " + dmg);
+                    var dead = blueMinion.TakeDamage(dmg);
+                    if (dead)
+                    {
+                        _minionLocations[x, y] = redMinion.gameObject.name;
+                        fightDone = true;
+                        Debug.Log("Red Won");
+                    }
+                    currentTime = 0.0f;
+                    isBlueRound = true;
+                }
+            }
+            else
+            {
+                currentTime += Time.deltaTime;
+            }
+
+            yield return null;
+        }
+
+        _fightHere[x, y] = false;
+        yield return null;
     }
     #endregion
 

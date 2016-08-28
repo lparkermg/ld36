@@ -39,7 +39,7 @@ public class MinionBot : MonoBehaviour {
         Y = y;
     }
 
-    public float TakeDamage(float amount)
+    public bool TakeDamage(float amount)
     {
         var defBonus = Random.Range(0, _maxBonusDefence);
         var def = BaseDefence + defBonus;
@@ -48,10 +48,13 @@ public class MinionBot : MonoBehaviour {
             damage = 0.0f;
         CurrentHp -= damage;
 
-        if (CurrentHp == 0.0f)
+        if (CurrentHp <= 0.0f)
+        {
             Dead();
+            return true;
+        }
 
-        return damage;
+        return false;
     }
 
     public float Attack()
@@ -69,6 +72,5 @@ public class MinionBot : MonoBehaviour {
     private void Dead()
     {
         _gameplayManager.RemoveDeadMinion(gameObject.name, X, Y);
-        Destroy(gameObject);
     }
 }
