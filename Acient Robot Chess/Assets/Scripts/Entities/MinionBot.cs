@@ -15,15 +15,15 @@ public class MinionBot : MonoBehaviour {
     public float BaseDefence = 5.0f;
     private float _maxBonusDefence = 2.5f;
 
-    private GameplayManager _gameplayManager;
+    //private GameplayManager _gameplayManager;
 
     public int X;
     public int Y;
 
     void Start()
     {
-        var manager = GameObject.FindGameObjectWithTag("Managers");
-        _gameplayManager = manager.GetComponent<GameplayManager>();
+        //var manager = GameObject.FindGameObjectWithTag("Managers");
+        //_gameplayManager = manager.GetComponent<GameplayManager>();
     }
 
     public void InitBot()
@@ -50,7 +50,6 @@ public class MinionBot : MonoBehaviour {
 
         if (CurrentHp <= 0.0f)
         {
-            Dead();
             return true;
         }
 
@@ -67,10 +66,5 @@ public class MinionBot : MonoBehaviour {
         }
 
         return amount;
-    }
-
-    private void Dead()
-    {
-        _gameplayManager.RemoveDeadMinion(gameObject.name, X, Y);
     }
 }

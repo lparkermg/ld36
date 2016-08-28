@@ -23,6 +23,8 @@ public class GameplayManager : MonoBehaviour {
     private bool[,] _fightHere;
     public Dictionary<string, GameObject> FriendlyMinionObjects = new Dictionary<string, GameObject>();
     public Dictionary<string, GameObject> EnemyMinionObjects = new Dictionary<string, GameObject>();
+    public List<string> FriendlyFighting = new List<string>();
+    public List<string> EnemyFighting = new List<string>();
 
     //Score Keeping
     public int CurrentRound = 1;
@@ -38,6 +40,8 @@ public class GameplayManager : MonoBehaviour {
     private GameObject _selectedMinion;
     public GameObject Cursor;
     private GameObject _cursor;
+
+    private bool _roundDone = false;
 
     //Input Stuff
     public Camera Camera;
@@ -101,6 +105,10 @@ public class GameplayManager : MonoBehaviour {
         LevelsDone.Add(_levelDataHolder.LastRandomLayout);
         StartCoroutine(LoadLevelTiles());
         StartCoroutine(SpawnMinions());
+        var maxCharge = 1.0f / (float)CurrentRound;
+        maxCharge = 0.1f;
+        _roundDone = false;
+        StartCoroutine(AIProcess(maxCharge));
 
     }
     IEnumerator LoadLevelTiles()
@@ -142,6 +150,7 @@ public class GameplayManager : MonoBehaviour {
                 _levelData[x, y] = 0;
 
                 _minionLocations[x, y] = "None";
+                _fightHere[x, y] = false;
             }
         }
         
@@ -154,7 +163,7 @@ public class GameplayManager : MonoBehaviour {
         }
 
         FriendlyMinionObjects = new Dictionary<string, GameObject>();
-
+        FriendlyFighting = new List<string>();
         if(EnemyMinionObjects.Count > 0)
         {
             foreach(var minion in EnemyMinionObjects)
@@ -164,7 +173,7 @@ public class GameplayManager : MonoBehaviour {
         }
 
         EnemyMinionObjects = new Dictionary<string, GameObject>();
-
+        EnemyFighting = new List<string>();
 
         yield return null;
     }
@@ -268,7 +277,7 @@ public class GameplayManager : MonoBehaviour {
             var y = tileData.Y;
             if (!action)
             {
-                SelectMinion(x, y);
+                SelectMinion(x, y,false);
             }
             else
             {
@@ -276,8 +285,6 @@ public class GameplayManager : MonoBehaviour {
                     TryMoveMinion(x, y,false,_selectedMinion.GetComponent<MinionBot>());
             }
         }
-
-
     }
 
     public void RotateCamera(bool goLeft)
@@ -291,59 +298,94 @@ public class GameplayManager : MonoBehaviour {
             CameraHolder.AddTorque(new Vector3(0.0f, -1.0f, 0.0f), ForceMode.Acceleration);
         }
     }
-    private void SelectMinion(int x, int y)
+    private MinionBot SelectMinion(int x, int y, bool ai)
     {
         if (!_fightHere[x, y])
         {
             if (_minionLocations[x, y] != null)
             {
-                if (_minionLocations[x, y].Contains("Blue"))
+                if (_minionLocations[x, y].Contains("Blue") && !ai)
                 {
                     _selectedMinionName = _minionLocations[x, y];
                     _selectedMinion = GameObject.Find(_selectedMinionName);
+                    if (_selectedMinion != null)
+                    {
+                        _cursor.SetActive(true);
+                        _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+                        return _selectedMinion.GetComponent<MinionBot>();
+                    }
+                    else
+                    {
 
-                    _cursor.SetActive(true);
-                    _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+                    }
 
                 }
-            }
+                else if(_minionLocations[x,y].Contains("Red") && ai)
+                {
+                    var minionName = _minionLocations[x, y];
+                    return GameObject.Find(minionName).GetComponent<MinionBot>();
+                }
+            }  
         }
+        return null;
     }
 
     public void TryMoveMinion(int x, int y,bool ai,MinionBot minionBot)
     {
         var canMove = CanMoveHere(x, y,ai);
-
+        
         if (canMove)
         {
             var oldX = minionBot.X;
             var oldY = minionBot.Y;
 
             //Move the selected minion object.
-            _selectedMinion.transform.position = new Vector3((float)x,1.0f,(float)y);
-            _selectedMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
+            if (!ai)
+            {
+                _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+            }
+            minionBot.gameObject.transform.position = new Vector3((float)x,1.0f,(float)y);
+            minionBot.UpdatePosition(x, y);
+
 
             if(_minionLocations[x,y] != null)
             {
                 if (_minionLocations[x, y].Contains("Red") && !ai)
                 {
+                    _cursor.SetActive(false);
+                    _selectedMinion = null;
+                    _selectedMinionName = "None";
+                    _fightHere[x, y] = true;
+                    FriendlyFighting.Add(minionBot.gameObject.name);
+                    EnemyFighting.Add(_minionLocations[x, y]);
                     StartCoroutine(Fight(minionBot.gameObject.name, _minionLocations[x, y], x, y, true));
+                    return;
                 }
                 else if(_minionLocations[x,y].Contains("Blue") && ai)
                 {
-                    StartCoroutine(Fight(minionBot.gameObject.name, _minionLocations[x, y], x, y, false));
+                    _fightHere[x, y] = true;
+                    if(_minionLocations[x,y] == _selectedMinionName)
+                    {
+                        _selectedMinion = null;
+                        _selectedMinionName = "None";
+                        _cursor.SetActive(false);
+                    }
+                    EnemyFighting.Add(minionBot.gameObject.name);
+                    FriendlyFighting.Add(_minionLocations[x, y]);
+                    StartCoroutine(Fight( _minionLocations[x, y], minionBot.gameObject.name, x, y, false));
+                    return;
+                }
+                else
+                {
+                    _minionLocations[oldX, oldY] = null;
+                    _minionLocations[x, y] = minionBot.gameObject.name;
                 }
             }
             //If the minion is moving on to an enemy minion then start a fight Coroutine and go until it's finished..
             //Also make that tile unselectable and remove the selection object.
             //Update the Level Data and minion locations with new ones based on who won the fight.
 
-            _minionLocations[oldX, oldY] = null;
-            _minionLocations[x, y] = _selectedMinionName;
-            if (!ai)
-            {
-                _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
-            }
+            
         }
     }
 
@@ -390,6 +432,7 @@ public class GameplayManager : MonoBehaviour {
         {
             Destroy(FriendlyMinionObjects[name]);
             FriendlyMinionObjects.Remove(name);
+            
             IncrementPoints(false, 2);
         }
         else if (name.Contains("Red"))
@@ -426,62 +469,117 @@ public class GameplayManager : MonoBehaviour {
         var fightDone = false;
         var currentTime = 0.0f;
         var timePerRound = 0.5f;
-
-        var blueMinion = FriendlyMinionObjects[blueName].GetComponent<MinionBot>();
-        var redMinion = EnemyMinionObjects[redName].GetComponent<MinionBot>();
-
-        Debug.Log("FIGHT FIGHT FIGHT");
-        _fightHere[x, y] = true;
-        var isBlueRound = playerAttackFirst;
-        while (!fightDone)
+        if (FriendlyMinionObjects.ContainsKey(blueName) && EnemyMinionObjects.ContainsKey(redName))
         {
-            if (currentTime >= timePerRound)
+
+            var blueMinion = FriendlyMinionObjects[blueName].GetComponent<MinionBot>();
+            var redMinion = EnemyMinionObjects[redName].GetComponent<MinionBot>();
+
+            Debug.Log("FIGHT FIGHT FIGHT");
+            _fightHere[x, y] = true;
+            var isBlueRound = playerAttackFirst;
+            while (!fightDone)
             {
-                if (isBlueRound)
+                if (currentTime >= timePerRound)
                 {
-                    var dmg = blueMinion.Attack();
-                    Debug.Log("Blue dmg: " + dmg);
-                    var dead = redMinion.TakeDamage(dmg);
-                    if (dead)
+                    if (isBlueRound)
                     {
-                        _minionLocations[x, y] = blueMinion.gameObject.name;
-                        fightDone = true;
-                        Debug.Log("Blue Won");
+                        var dmg = blueMinion.Attack();
+                        Debug.Log("Blue dmg: " + dmg);
+                        var dead = redMinion.TakeDamage(dmg);
+                        if (dead)
+                        {
+                            _minionLocations[x, y] = blueMinion.gameObject.name;
+                            fightDone = true;
+                            FriendlyFighting.Remove(blueMinion.gameObject.name);
+                            EnemyFighting.Remove(redMinion.gameObject.name);
+                            RemoveDeadMinion(redMinion.gameObject.name, x, y);
+                            _fightHere[x, y] = false;
+                            Debug.Log("Blue Won");
+                        }
+                        currentTime = 0.0f;
+                        isBlueRound = false;
                     }
-                    currentTime = 0.0f;
-                    isBlueRound = false;
+                    else
+                    {
+                        var dmg = redMinion.Attack();
+                        Debug.Log("Red dmg: " + dmg);
+                        var dead = blueMinion.TakeDamage(dmg);
+                        if (dead)
+                        {
+                            _minionLocations[x, y] = redMinion.gameObject.name;
+                            fightDone = true;
+                            FriendlyFighting.Remove(blueMinion.gameObject.name);
+                            EnemyFighting.Remove(redMinion.gameObject.name);
+                            RemoveDeadMinion(blueMinion.gameObject.name, x, y);
+                            _fightHere[x, y] = false;
+                            Debug.Log("Red Won");
+                        }
+                        currentTime = 0.0f;
+                        isBlueRound = true;
+                    }
                 }
                 else
                 {
-                    var dmg = redMinion.Attack();
-                    Debug.Log("Red dmg: " + dmg);
-                    var dead = blueMinion.TakeDamage(dmg);
-                    if (dead)
-                    {
-                        _minionLocations[x, y] = redMinion.gameObject.name;
-                        fightDone = true;
-                        Debug.Log("Red Won");
-                    }
-                    currentTime = 0.0f;
-                    isBlueRound = true;
+                    currentTime += Time.deltaTime;
                 }
+
+                yield return null;
+            }
+            _fightHere[x, y] = false;
+        }
+        _fightHere[x, y] = false;
+        
+        yield return null;
+    }
+    #endregion
+
+    #region AI Stuff
+    IEnumerator AIProcess(float maxChargeTime)
+    {
+        var currentTime = 0.0f;
+        var names = new List<string>();
+
+       
+        while (!_roundDone)
+        {
+            
+            if (currentTime > maxChargeTime)
+            {
+                names.Clear();
+                foreach (var minion in EnemyMinionObjects)
+                {
+                    if (!EnemyFighting.Contains(minion.Key))
+                        names.Add(minion.Key);
+                }
+                if (names.Count > 0)
+                {
+                    var selectedMinionNum = Random.Range(0, names.Count);
+                    var selectedMinionObj = EnemyMinionObjects[names[selectedMinionNum]];
+                    if (selectedMinionObj != null)
+                    {
+                        var selectedMinion = selectedMinionObj.GetComponent<MinionBot>();
+                        var moveX = Random.Range(0, LEVEL_SIZE);
+                        var moveY = Random.Range(0, LEVEL_SIZE);
+                        TryMoveMinion(moveX, moveY, true, selectedMinion);
+                    }
+                }
+                currentTime = 0.0f;
             }
             else
             {
                 currentTime += Time.deltaTime;
             }
-
             yield return null;
         }
 
-        _fightHere[x, y] = false;
         yield return null;
     }
     #endregion
-
     #region Gameplay Stuff
     private void NextRound()
     {
+        _roundDone = true;
         if(CurrentRound >= TotalRounds)
         {
             Debug.Log("WINNER");
@@ -491,7 +589,7 @@ public class GameplayManager : MonoBehaviour {
         {
             Debug.Log("Next Round");
             CurrentRound++;
-            
+
             StartCoroutine(DestroyOldLevel());
             LoadNewLevel();
         }
