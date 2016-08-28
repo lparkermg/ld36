@@ -2,10 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using Helpers.Levels;
+using Entities;
 public class GameplayManager : MonoBehaviour {
 
     //Level Stuff.
-    const int LEVEL_SIZE = 16;
+    public const int LEVEL_SIZE = 16;
     private int[,] _levelData;
 
     private LevelDataHolder _levelDataHolder;
@@ -18,9 +19,10 @@ public class GameplayManager : MonoBehaviour {
     #endregion
 
     //Minion Location Stuff
-    private int[,] _minionLocations;
-    public List<GameObject> FriendlyMinionObjects = new List<GameObject>();
-    public List<GameObject> EnemyMinionObjects = new List<GameObject>();
+    private string[,] _minionLocations;
+    private bool[,] _fightHere;
+    public Dictionary<string, GameObject> FriendlyMinionObjects = new Dictionary<string, GameObject>();
+    public Dictionary<string, GameObject> EnemyMinionObjects = new Dictionary<string, GameObject>();
 
     //Score Keeping
     public int CurrentRound = 1;
@@ -31,6 +33,16 @@ public class GameplayManager : MonoBehaviour {
 
     public List<int> LevelsDone = new List<int>();
 
+    //Current Stuff
+    private string _selectedMinionName = "None";
+    private GameObject _selectedMinion;
+    public GameObject Cursor;
+    private GameObject _cursor;
+
+    //Input Stuff
+    public Camera Camera;
+    public Rigidbody CameraHolder;
+    public InputManager InputManager;
 
 	// Use this for initialization
 	void Start () {
@@ -39,22 +51,28 @@ public class GameplayManager : MonoBehaviour {
         _tileLocations = new GameObject[LEVEL_SIZE, LEVEL_SIZE];
         _blueSpawnerLocations = new Vector3?[LEVEL_SIZE, LEVEL_SIZE];
         _redSpawnerLocations = new Vector3?[LEVEL_SIZE, LEVEL_SIZE];
-        _minionLocations = new int[LEVEL_SIZE, LEVEL_SIZE];
-
+        _minionLocations = new string[LEVEL_SIZE, LEVEL_SIZE];
+        _fightHere = new bool[LEVEL_SIZE, LEVEL_SIZE];
+        _cursor = GameObject.Instantiate(Cursor, new Vector3(0.0f, 0.0f, 0.0f), Cursor.transform.rotation) as GameObject;
 
         LoadNewLevel();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+        InputManager.CheckInput();
+        //Auto change round for testing.
+        if (Input.GetKeyUp(KeyCode.N))
+        {
+            NextRound();
+        }
 	}
 
-    //Level Stuff
+    #region Level Stuff
     private void LoadNewLevel()
     {
         var layoutNotDone = false;
-
+        _cursor.SetActive(false);
         while (!layoutNotDone)
         {
             var matched = 0;
@@ -96,6 +114,9 @@ public class GameplayManager : MonoBehaviour {
                     AddSpawnLocation(x, y, _levelData[x, y]);
                     var tileTemplate = _levelDataHolder.GetTileTypeByNumber(_levelData[x, y]);
                     GameObject tile = GameObject.Instantiate(tileTemplate,placementLocation,tileTemplate.transform.rotation) as GameObject;
+                    var data = tile.GetComponent<TileData>();
+                    data.X = x;
+                    data.Y = y;
                     _tileLocations[x, y] = tile;
                 }
                 
@@ -104,14 +125,48 @@ public class GameplayManager : MonoBehaviour {
         yield return null;
     }
 
-    /*IEnumerator DestroyOldLevel()
+    IEnumerator DestroyOldLevel()
     {
-        //TODO: Clear Tiles.
-        //TODO: Clear Spawner Location Data.
-        //TODO: Clear Remaining Minions.
-        //TODO: Clear LevelData.
-        //TODO: Clear Minion Locations Data.
-    }*/
+        
+        for(var x = 0; x <LEVEL_SIZE;x++)
+        {
+            for (var y = 0; y < LEVEL_SIZE; y++)
+            {
+                Destroy(_tileLocations[x, y]);
+                _tileLocations[x, y] = null;
+
+                _blueSpawnerLocations[x, y] = null;
+                _redSpawnerLocations[x, y] = null;
+
+                _levelData[x, y] = 0;
+
+                _minionLocations[x, y] = "None";
+            }
+        }
+        
+        if(FriendlyMinionObjects.Count > 0)
+        {
+            foreach(var minion in FriendlyMinionObjects)
+            {
+                Destroy(minion.Value);
+            }
+        }
+
+        FriendlyMinionObjects = new Dictionary<string, GameObject>();
+
+        if(EnemyMinionObjects.Count > 0)
+        {
+            foreach(var minion in EnemyMinionObjects)
+            {
+                Destroy(minion.Value);
+            }
+        }
+
+        EnemyMinionObjects = new Dictionary<string, GameObject>();
+
+
+        yield return null;
+    }
 
     IEnumerator SpawnMinions()
     {
@@ -131,11 +186,15 @@ public class GameplayManager : MonoBehaviour {
                 {
                     var blueBot = _levelDataHolder.TeamBlueMinion;
                     GameObject blueMinion = GameObject.Instantiate(blueBot, (Vector3)_blueSpawnerLocations[x, y], blueBot.transform.rotation) as GameObject;
+                    var botId = "Blue-" + placedAmountBlue;
+                    blueMinion.name = botId;
+                    blueMinion.GetComponent<MinionBot>().InitBot();
+                    blueMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
                     //TODO: Set location in minion class when it's made.
-                    FriendlyMinionObjects.Add(blueMinion);
+                    FriendlyMinionObjects.Add(botId, blueMinion);
                     placedBlue = true;
                     placedAmountBlue++;
-                    _minionLocations[x, y] = 1;
+                    _minionLocations[x, y] = botId;
 
                 }
                 else if(_blueSpawnerLocations[x, y] != null && placedBlue)
@@ -147,11 +206,15 @@ public class GameplayManager : MonoBehaviour {
                 {
                     var redBot = _levelDataHolder.TeamRedMinion;
                     GameObject redMinion = GameObject.Instantiate(redBot, (Vector3)_redSpawnerLocations[x, y], redBot.transform.rotation) as GameObject;
+                    var botId = "Red-" + placedAmountRed;
+                    redMinion.name = botId;
+                    redMinion.GetComponent<MinionBot>().InitBot();
+                    redMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
                     //TODO: Set location in minion class when its made.
-                    EnemyMinionObjects.Add(redMinion);
+                    EnemyMinionObjects.Add(botId,redMinion);
                     placedRed = true;
                     placedAmountRed++;
-                    _minionLocations[x, y] = 2;
+                    _minionLocations[x, y] = botId;
                 }
                 else if(_redSpawnerLocations[x, y] != null && placedRed)
                 {
@@ -190,62 +253,174 @@ public class GameplayManager : MonoBehaviour {
 
         }
     }
-
-    //Input Stuff
-    public void SelectMinion(int x, int y)
+    #endregion
+    #region Input Stuff
+    public void TrySelect(Vector3 mousePos,bool action)
     {
-        //We Only need to select the blue team.
-        if(_minionLocations[x,y] == 1)
+        RaycastHit hit;
+        Ray ray = Camera.ScreenPointToRay(mousePos);
+
+        if(Physics.Raycast(ray,out hit, 100.0f))
         {
-            //Get the minion that is at this location and set to selected.
+            var tileData = hit.collider.gameObject.GetComponent<TileData>();
+            var x = tileData.X;
+            var y = tileData.Y;
+            if (!action)
+            {
+                SelectMinion(x, y);
+            }
+            else
+            {
+                if(_selectedMinionName != "None")
+                    TryMoveMinion(x, y);
+            }
+        }
+
+
+    }
+
+    public void RotateCamera(bool goLeft)
+    {
+        if (goLeft)
+        {
+            CameraHolder.AddTorque(new Vector3(0.0f, 1.0f, 0.0f), ForceMode.Acceleration);
+        }
+        else
+        {
+            CameraHolder.AddTorque(new Vector3(0.0f, -1.0f, 0.0f), ForceMode.Acceleration);
+        }
+    }
+    private void SelectMinion(int x, int y)
+    {
+        if (!_fightHere[x, y])
+        {
+            if (_minionLocations[x, y] != null)
+            {
+                if (_minionLocations[x, y].Contains("Blue"))
+                {
+                    _selectedMinionName = _minionLocations[x, y];
+                    _selectedMinion = GameObject.Find(_selectedMinionName);
+
+                    _cursor.SetActive(true);
+                    _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+
+                }
+            }
         }
     }
 
-    public bool CanMoveHere(int x, int y)
+    public void TryMoveMinion(int x, int y)
     {
-        //We only need to check for if there's no data or if a friendly is there.
+        var canMove = CanMoveHere(x, y);
+
+        if (canMove)
+        {
+            var minionBot = _selectedMinion.GetComponent<MinionBot>();
+            var oldX = minionBot.X;
+            var oldY = minionBot.Y;
+
+            //Move the selected minion object.
+            _selectedMinion.transform.position = new Vector3((float)x,1.0f,(float)y);
+            _selectedMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
+            //If the minion is moving on to an enemy minion then start a fight Coroutine and go until it's finished..
+            //Also make that tile unselectable and remove the selection object.
+            //Update the Level Data and minion locations with new ones based on who won the fight.
+            _minionLocations[oldX, oldY] = null;
+            _minionLocations[x, y] = _selectedMinionName;
+            _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+        }
+    }
+
+    private void UpdateMinionLocationsArray(string name, int newX, int newY)
+    {
+        for(var x = 0; x < LEVEL_SIZE; x++)
+        {
+            for(var y = 0; y < LEVEL_SIZE; y++)
+            {
+                if(_minionLocations[x,y] != null && _minionLocations[x,y] == name)
+                {
+                    _minionLocations[x, y] = null;
+                }
+            }
+        }
+
+        _minionLocations[newX, newY] = name;
+    }
+
+    private bool CanMoveHere(int x, int y)
+    {
         if (_levelData[x,y] > 2)
             return false;
 
-        //Team Blue Minion is here.
-        if (_minionLocations[x, y] == 1)
+        if(_minionLocations[x,y] != null)
+            if (_minionLocations[x, y].Contains("Blue"))
+                return false;
+
+        if (_fightHere[x, y])
             return false;
 
         return true;
     }
 
-    //Minion Check
-    private void CheckMinions()
+
+
+    #endregion
+    #region Minion Stuff
+    public void RemoveDeadMinion(string name, int x, int y)
+    {
+        _fightHere[x, y] = false;
+        _minionLocations[x, y] = name;
+        if (name.Contains("Blue"))
+        {
+            FriendlyMinionObjects.Remove(name);
+            IncrementPoints(true, 2);
+        }
+        else if (name.Contains("Red"))
+        {
+            EnemyMinionObjects.Remove(name);
+            IncrementPoints(true, 2);
+        }
+
+    }
+
+    private void CheckRemainingMinions()
     {
         if(FriendlyMinionObjects.Count == 0)
         {
             //TODO: Player Lost round code here.
+            
             IncrementPoints(false, 10);
+            NextRound();
+
         }
         else if(EnemyMinionObjects.Count == 0)
         {
             //TODO: Player won round code here.
             IncrementPoints(true, 10);
+            NextRound();
         }
-
     }
+    #endregion
 
+    #region Gameplay Stuff
     private void NextRound()
     {
         if(CurrentRound >= TotalRounds)
         {
+            Debug.Log("WINNER");
             //TODO:Display Winner Message Here!
         }
         else
         {
+            Debug.Log("Next Round");
             CurrentRound++;
-            //TODO Destroy Old Level and Make new one.
-
-
+            
+            StartCoroutine(DestroyOldLevel());
+            LoadNewLevel();
         }
     }
 
-    //Points Stuff
+
     public void IncrementPoints(bool forPlayer, int amount)
     {
         if (forPlayer)
@@ -258,11 +433,12 @@ public class GameplayManager : MonoBehaviour {
         }
     }
     
-    private bool PlayerWins()
+    private bool DidPlayerWin()
     {
         if(BlueTotalPoints > RedTotalPoints)
             return true;
 
         return false;
     }
+    #endregion
 }
