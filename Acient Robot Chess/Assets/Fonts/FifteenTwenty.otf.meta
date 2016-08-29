@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: ed72682ae1007e644ac370fa16178da7
+timeCreated: 1472485455
+licenseType: Pro
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 60
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - FifteenTwenty
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: a541cd93f7f9bba44b16a3a20d09c275, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
