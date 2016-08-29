@@ -11,4 +11,12 @@ public static class GameplayDataManager
     public static Dictionary<string, GameObject> EnemyMinionObjects = new Dictionary<string, GameObject>();
     public static List<string> FriendlyFighting = new List<string>();
     public static List<string> EnemyFighting = new List<string>();
+
+    public static void ClearTheData()
+    {
+        FriendlyMinionObjects = new Dictionary<string, GameObject>();
+        EnemyMinionObjects = new Dictionary<string, GameObject>();
+        FriendlyFighting = new List<string>();
+        EnemyFighting = new List<string>();
+    }
 }

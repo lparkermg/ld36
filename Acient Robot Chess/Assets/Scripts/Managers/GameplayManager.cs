@@ -79,6 +79,17 @@ public class GameplayManager : MonoBehaviour {
         UIManager.HideNotice();
         LoadNewLevel();
     }
+
+    public void StartOver()
+    {
+        UIManager.HideEnd();
+        CurrentRound = 1;
+        BlueTotalPoints = 0;
+        RedTotalPoints = 0;
+        StartCoroutine(DestroyOldLevel());
+        LoadNewLevel();
+    }
+
     #region Level Stuff
     private void LoadNewLevel()
     {
@@ -727,24 +738,23 @@ public class GameplayManager : MonoBehaviour {
         _roundDone = true;
         if(CurrentRound >= TotalRounds)
         {
-            Debug.Log("WINNER");
-            //TODO:Display Winner Message Here!
             if(BlueTotalPoints == RedTotalPoints)
             {
-                Debug.Log("Draw!!");
+                UIManager.UpdateMessageText("Close, it's a draw...");
             }
             else if(BlueTotalPoints > RedTotalPoints)
             {
-                Debug.Log("Winrar!");
+                UIManager.UpdateMessageText("Congratulations, you won...");
             }
             else if(BlueTotalPoints < RedTotalPoints)
             {
-                Debug.Log("Loser!!");
+                UIManager.UpdateMessageText("Hard luck, you lost...");
             }
+            _roundDone = true;
+            UIManager.ShowEnd();
         }
         else
         {
-            Debug.Log("Next Round");
             CurrentRound++;
 
             StartCoroutine(DestroyOldLevel());

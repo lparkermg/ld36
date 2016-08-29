@@ -8,7 +8,10 @@ public class GameplayUIManager : MonoBehaviour {
     public Text PlayerPoints;
     public Text ComputerPoints;
 
+    public Text MessageText;
+
     public CanvasGroup NoticeGroup;
+    public CanvasGroup EndGroup;
 
     // Use this for initialization
     void Start() {
@@ -47,5 +50,24 @@ public class GameplayUIManager : MonoBehaviour {
         NoticeGroup.alpha = 0.0f;
         NoticeGroup.interactable = false;
         NoticeGroup.blocksRaycasts = false;
+    }
+
+    public void HideEnd()
+    {
+        EndGroup.alpha = 0.0f;
+        EndGroup.interactable = false;
+        EndGroup.blocksRaycasts = false;
+    }
+
+    public void ShowEnd()
+    {
+        EndGroup.alpha = 1.0f;
+        EndGroup.interactable = true;
+        EndGroup.blocksRaycasts = true;
+    }
+
+    public void UpdateMessageText(string text)
+    {
+        MessageText.text = text;
     }
 }
