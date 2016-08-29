@@ -8,6 +8,8 @@ public class GameplayUIManager : MonoBehaviour {
     public Text PlayerPoints;
     public Text ComputerPoints;
 
+    public CanvasGroup NoticeGroup;
+
     // Use this for initialization
     void Start() {
 
@@ -38,5 +40,12 @@ public class GameplayUIManager : MonoBehaviour {
     public void UpdateRundNumber(int number)
     {
         RoundNumber.text = number.ToString("0");
+    }
+
+    public void HideNotice()
+    {
+        NoticeGroup.alpha = 0.0f;
+        NoticeGroup.interactable = false;
+        NoticeGroup.blocksRaycasts = false;
     }
 }

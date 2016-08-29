@@ -39,7 +39,7 @@ public class GameplayManager : MonoBehaviour {
     public GameObject Cursor;
     private GameObject _cursor;
 
-    private bool _roundDone = false;
+    private bool _roundDone = true;
 
     //Input Stuff
     public Camera Camera;
@@ -57,20 +57,28 @@ public class GameplayManager : MonoBehaviour {
         GameplayDataManager.FightHere = new bool[LEVEL_SIZE, LEVEL_SIZE];
         _cursor = GameObject.Instantiate(Cursor, new Vector3(0.0f, 0.0f, 0.0f), Cursor.transform.rotation) as GameObject;
 
-        LoadNewLevel();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        InputManager.CheckInput();
-        CheckRemainingMinions();
-        //Auto change round for testing.
-        if (Input.GetKeyUp(KeyCode.N))
+        if (!_roundDone)
         {
-            NextRound();
+            InputManager.CheckInput();
+            CheckRemainingMinions();
+            //Auto change round for testing.
+            if (Input.GetKeyUp(KeyCode.N))
+            {
+                NextRound();
+            }
         }
 	}
 
+
+    public void AcceptBattle()
+    {
+        UIManager.HideNotice();
+        LoadNewLevel();
+    }
     #region Level Stuff
     private void LoadNewLevel()
     {
@@ -104,7 +112,7 @@ public class GameplayManager : MonoBehaviour {
         LevelsDone.Add(_levelDataHolder.LastRandomLayout);
         StartCoroutine(LoadLevelTiles());
         StartCoroutine(SpawnMinions());
-        var maxCharge = 2.0f / (float)CurrentRound;
+        var maxCharge = 1.5f / (float)CurrentRound;
         //maxCharge = 0.1f;
         _roundDone = false;
         StartCoroutine(AIProcess(maxCharge));
@@ -188,8 +196,14 @@ public class GameplayManager : MonoBehaviour {
 
     IEnumerator SpawnMinions()
     {
-        var spawnAmountBlue = _blueSpawnerCount / 2;
-        var spawnAmountRed = _redSpawnerCount / 2;
+        var spawnAmountBlue = _blueSpawnerCount;
+        var spawnAmountRed = _redSpawnerCount;
+
+        if (spawnAmountBlue > 12)
+            spawnAmountBlue = 12;
+
+        if (spawnAmountRed > 12)
+            spawnAmountRed = 12;
 
         var placedAmountBlue = 0;
         var placedAmountRed = 0;
@@ -200,7 +214,7 @@ public class GameplayManager : MonoBehaviour {
         {
             for(var y = 0; y < LEVEL_SIZE; y++)
             {
-                if (_blueSpawnerLocations[x, y] != null && !placedBlue && placedAmountBlue < spawnAmountBlue)
+                if (_blueSpawnerLocations[x, y] != null && placedAmountBlue < spawnAmountBlue)
                 {
                     var blueBot = _levelDataHolder.TeamBlueMinion;
                     GameObject blueMinion = GameObject.Instantiate(blueBot, (Vector3)_blueSpawnerLocations[x, y], blueBot.transform.rotation) as GameObject;
@@ -214,12 +228,8 @@ public class GameplayManager : MonoBehaviour {
                     GameplayDataManager.MinionLocations[x, y] = botId;
 
                 }
-                else if(_blueSpawnerLocations[x, y] != null && placedBlue)
-                {
-                    placedBlue = false;
-                }
 
-                if(_redSpawnerLocations[x,y] != null && !placedRed && placedAmountRed < spawnAmountRed)
+                if(_redSpawnerLocations[x,y] != null && placedAmountRed < spawnAmountRed)
                 {
                     var redBot = _levelDataHolder.TeamRedMinion;
                     GameObject redMinion = GameObject.Instantiate(redBot, (Vector3)_redSpawnerLocations[x, y], redBot.transform.rotation) as GameObject;
@@ -228,13 +238,8 @@ public class GameplayManager : MonoBehaviour {
                     redMinion.GetComponent<MinionBot>().InitBot();
                     redMinion.GetComponent<MinionBot>().UpdatePosition(x, y);
                     GameplayDataManager.EnemyMinionObjects.Add(botId,redMinion);
-                    placedRed = true;
                     placedAmountRed++;
                     GameplayDataManager.MinionLocations[x, y] = botId;
-                }
-                else if(_redSpawnerLocations[x, y] != null && placedRed)
-                {
-                    placedRed = false;
                 }
             }
         }
@@ -312,12 +317,15 @@ public class GameplayManager : MonoBehaviour {
             {
                 if (GameplayDataManager.MinionLocations[x, y].Contains("Blue") && !ai)
                 {
+                    ClearValidMovesFromBoard();
                     _selectedMinionName = GameplayDataManager.MinionLocations[x, y];
                     _selectedMinion = GameObject.Find(_selectedMinionName);
                     if (_selectedMinion != null)
                     {
                         _cursor.SetActive(true);
                         _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+                        DisplayValidMovesFromPoint(x, y);
+                        //Set up flashing inducation of where we can move to.
                         return _selectedMinion.GetComponent<MinionBot>();
                     }
                     else
@@ -336,19 +344,72 @@ public class GameplayManager : MonoBehaviour {
         return null;
     }
 
+    public void DisplayValidMovesFromPoint(int x, int y)
+    {
+        for(var xInc = -1; xInc < 2; xInc++)
+        {
+            for(var yInc = -1; yInc < 2; yInc++)
+            {
+                var xToCheck = x + xInc;
+                var yToCheck = y + yInc;
+                var activate = CanMoveHere(x, y, xToCheck, yToCheck, false);
+                if (activate)
+                {
+                    _tileLocations[xToCheck, yToCheck].GetComponent<TileData>().Activate(); //Put an Activate() thing in tile data to display activation thing.
+                }
+            }
+        }
+
+    }
+
+    public void ClearValidMovesFromBoard()
+    {
+        for (var x = 0; x < LEVEL_SIZE; x++)
+        {
+            for (var y = 0; y < LEVEL_SIZE; y++)
+            {
+                if (_tileLocations[x, y] != null)
+                {
+                    _tileLocations[x, y].GetComponent<TileData>().Deactivate(); //Put an Deactivate() thing in tile data to remove activation thing.
+                }
+            }
+        }
+    }
+
+    public void ClearValidMovesFromPoint(int x, int y)
+    {
+        for (var xInc = -1; xInc < 2; xInc++)
+        {
+            for (var yInc = -1; yInc < 2; yInc++)
+            {
+                var xToCheck = x + xInc;
+                var yToCheck = y + yInc;
+                if (xToCheck >= 0 && yToCheck >= 0 && xToCheck < LEVEL_SIZE && yToCheck < LEVEL_SIZE)
+                {
+                    if (_tileLocations[xToCheck, yToCheck] != null)
+                    {
+                        _tileLocations[xToCheck, yToCheck].GetComponent<TileData>().Deactivate(); //Put an Deactivate() thing in tile data to remove activation thing.
+                    }
+                }
+            }
+        }
+
+    }
+
     public void TryMoveMinion(int x, int y,bool ai,MinionBot minionBot)
     {
-        var canMove = CanMoveHere(x, y,ai);
+        var canMove = CanMoveHere(minionBot.X,minionBot.Y,x, y,ai);
         
         if (canMove)
         {
             var oldX = minionBot.X;
             var oldY = minionBot.Y;
 
-            //Move the selected minion object.
             if (!ai)
             {
-                _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);
+
+                ClearValidMovesFromPoint(oldX, oldY);
+                _cursor.transform.position = new Vector3((float)x, 0.0f, (float)y);                
             }
             minionBot.gameObject.transform.position = new Vector3((float)x,0.5f,(float)y);
             minionBot.UpdatePosition(x, y);
@@ -385,16 +446,17 @@ public class GameplayManager : MonoBehaviour {
                     StartCoroutine(Fight( GameplayDataManager.MinionLocations[x, y], minionBot.gameObject.name, x, y, false,fightMask));
                     return;
                 }
-                else
-                {
+
                     GameplayDataManager.MinionLocations[oldX, oldY] = null;
                     GameplayDataManager.MinionLocations[x, y] = minionBot.gameObject.name;
-                }
+                    DisplayValidMovesFromPoint(x, y);
+
             }
             else
             {
                 GameplayDataManager.MinionLocations[oldX, oldY] = null;
                 GameplayDataManager.MinionLocations[x, y] = minionBot.gameObject.name;
+                DisplayValidMovesFromPoint(x, y);
             }
 
         }
@@ -416,16 +478,40 @@ public class GameplayManager : MonoBehaviour {
         GameplayDataManager.MinionLocations[newX, newY] = name;
     }
 
-    private bool CanMoveHere(int x, int y,bool ai)
+    private bool CanMoveHere(int currentX, int currentY,int newX, int newY,bool ai)
     {
-        if (_levelData[x,y] > 2)
+        if (newX > currentX + 1)
             return false;
 
-        if (GameplayDataManager.MinionLocations[x, y] != null)
-            if (GameplayDataManager.MinionLocations[x, y].Contains("Blue") && !ai || GameplayDataManager.MinionLocations[x,y].Contains("Red") && ai)
+        if (newY > currentY + 1)
+            return false;
+
+        if (newY < currentY)
+            return false;
+
+        if (newX < currentX - 1)
+            return false;
+
+        if (newX < 0)
+            return false;
+
+        if (newY < 0)
+            return false;
+
+        if (newX > LEVEL_SIZE)
+            return false;
+
+        if (newY > LEVEL_SIZE)
+            return false;
+
+        if (_levelData[newX,newY] > 2)
+            return false;
+
+        if (GameplayDataManager.MinionLocations[newX, newY] != null)
+            if (GameplayDataManager.MinionLocations[newX, newY].Contains("Blue") && !ai || GameplayDataManager.MinionLocations[newX,newY].Contains("Red") && ai)
                 return false;
 
-        if (GameplayDataManager.FightHere[x, y])
+        if (GameplayDataManager.FightHere[newX, newY])
             return false;
 
         return true;
@@ -578,8 +664,8 @@ public class GameplayManager : MonoBehaviour {
                     if (selectedMinionObj != null)
                     {
                         var selectedMinion = selectedMinionObj.GetComponent<MinionBot>();
-                        var moveX = Random.Range(0, LEVEL_SIZE);
-                        var moveY = Random.Range(0, LEVEL_SIZE);
+                        var moveX = Random.Range(-1,0);
+                        var moveY = Random.Range(-1,1);
                         TryMoveMinion(moveX, moveY, true, selectedMinion);
                     }
                 }
