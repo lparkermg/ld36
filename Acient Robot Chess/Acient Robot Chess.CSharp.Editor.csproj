@@ -120,9 +120,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Acient Robot Chess.CSharp.Plugins.csproj">
+      <Project>{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}</Project>
+      <Name>Acient Robot Chess.CSharp.Plugins</Name>
+    </ProjectReference>
     <ProjectReference Include="Acient Robot Chess.CSharp.csproj">
       <Project>{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}</Project>
       <Name>Acient Robot Chess.CSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="Acient Robot Chess.CSharp.Editor.Plugins.csproj">
+      <Project>{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}</Project>
+      <Name>Acient Robot Chess.CSharp.Editor.Plugins</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -315,6 +323,24 @@
     <None Include="Assets\ShaderForge\Editor\InternalResources\Shader Presets\PresetUnlit.shader" />
     <None Include="Assets\ShaderForge\Readme.txt" />
     <None Include="Assets\Shaders\Scifi.shader" />
+    <None Include="Assets\Standard Assets\Effects\AmbientOcclusion\Resources\AmbientOcclusion.cginc" />
+    <None Include="Assets\Standard Assets\Effects\AmbientOcclusion\Resources\AmbientOcclusion.shader" />
+    <None Include="Assets\Standard Assets\Effects\AntiAliasing\FXAA\Resources\FXAA.shader" />
+    <None Include="Assets\Standard Assets\Effects\AntiAliasing\FXAA\Resources\FXAA3.cginc" />
+    <None Include="Assets\Standard Assets\Effects\AntiAliasing\SMAA\Resources\SMAA.cginc" />
+    <None Include="Assets\Standard Assets\Effects\AntiAliasing\SMAA\Resources\SMAA.shader" />
+    <None Include="Assets\Standard Assets\Effects\Bloom\Resources\Bloom.cginc" />
+    <None Include="Assets\Standard Assets\Effects\Bloom\Resources\Bloom.shader" />
+    <None Include="Assets\Standard Assets\Effects\DepthOfField\Resources\BokehSplatting.shader" />
+    <None Include="Assets\Standard Assets\Effects\DepthOfField\Resources\DepthOfField.shader" />
+    <None Include="Assets\Standard Assets\Effects\DepthOfField\Resources\MedianFilter.shader" />
+    <None Include="Assets\Standard Assets\Effects\LensAberrations\Resources\LensAberrations.shader" />
+    <None Include="Assets\Standard Assets\Effects\ScreenSpaceReflection\Resources\ScreenSpaceRaytrace.cginc" />
+    <None Include="Assets\Standard Assets\Effects\ScreenSpaceReflection\Resources\ScreenSpaceReflection.shader" />
+    <None Include="Assets\Standard Assets\Effects\TonemappingColorGrading\Resources\HistogramCompute.compute" />
+    <None Include="Assets\Standard Assets\Effects\TonemappingColorGrading\Resources\HistogramRender.shader" />
+    <None Include="Assets\Standard Assets\Effects\TonemappingColorGrading\Resources\TonemappingColorGrading.cginc" />
+    <None Include="Assets\Standard Assets\Effects\TonemappingColorGrading\Resources\TonemappingColorGrading.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

@@ -123,7 +123,7 @@ public class GameplayManager : MonoBehaviour {
         LevelsDone.Add(_levelDataHolder.LastRandomLayout);
         StartCoroutine(LoadLevelTiles());
         StartCoroutine(SpawnMinions());
-        var maxCharge = 1.0f / (float)CurrentRound;
+        var maxCharge = 0.5f / (float)CurrentRound;
         //maxCharge = 0.1f;
         _roundDone = false;
         StartCoroutine(AIProcess(maxCharge));
@@ -429,14 +429,14 @@ public class GameplayManager : MonoBehaviour {
                 _cursor.SetActive(false);
                 _selectedMinion = null;
                 _selectedMinionName = "None";
-                Destroy(minionBot.gameObject);
+                RemoveDeadMinion(minionBot.gameObject.name, oldX, oldY);
                 IncrementPoints(true, 5);
                 return true;
             }
             if(_blueSpawnerLocations[x,y] != null && ai)
             {
                 GameplayDataManager.MinionLocations[oldX, oldY] = null;
-                Destroy(minionBot.gameObject);
+                RemoveDeadMinion(minionBot.gameObject.name, oldX, oldY);
                 IncrementPoints(false, 5);
                 return true;
             }
@@ -569,18 +569,19 @@ public class GameplayManager : MonoBehaviour {
     public void RemoveDeadMinion(string name, int x, int y)
     {
         GameplayDataManager.FightHere[x, y] = false;
-        GameplayDataManager.MinionLocations[x, y] = name;
+        GameplayDataManager.MinionLocations[x, y] = null;
         if (name.Contains("Blue"))
         {
-            Destroy(GameplayDataManager.FriendlyMinionObjects[name]);
+            var go = GameplayDataManager.FriendlyMinionObjects[name];
             GameplayDataManager.FriendlyMinionObjects.Remove(name);
-            
-            
+            Destroy(go);
         }
         else if (name.Contains("Red"))
         {
-            Destroy(GameplayDataManager.EnemyMinionObjects[name]);
+            var go = GameplayDataManager.EnemyMinionObjects[name];
             GameplayDataManager.EnemyMinionObjects.Remove(name);
+            Destroy(go);
+            
 
         }
 
@@ -633,7 +634,6 @@ public class GameplayManager : MonoBehaviour {
                         var dead = redMinion.TakeDamage(dmg);
                         if (dead)
                         {
-                            GameplayDataManager.MinionLocations[x, y] = blueMinion.gameObject.name;
                             fightDone = true;
                             GameplayDataManager.FriendlyFighting.Remove(blueMinion.gameObject.name);
                             GameplayDataManager.EnemyFighting.Remove(redMinion.gameObject.name);
@@ -641,6 +641,7 @@ public class GameplayManager : MonoBehaviour {
                             RemoveDeadMinion(blueMinion.gameObject.name, x, y);
                             IncrementPoints(true, 2);
                             GameplayDataManager.FightHere[x, y] = false;
+                            GameplayDataManager.MinionLocations[x, y] = null;
                             Debug.Log("Blue Won");
                         }
                         currentTime = 0.0f;
@@ -653,7 +654,6 @@ public class GameplayManager : MonoBehaviour {
                         var dead = blueMinion.TakeDamage(dmg);
                         if (dead)
                         {
-                            GameplayDataManager.MinionLocations[x, y] = redMinion.gameObject.name;
                             fightDone = true;
                             GameplayDataManager.FriendlyFighting.Remove(blueMinion.gameObject.name);
                             GameplayDataManager.EnemyFighting.Remove(redMinion.gameObject.name);
@@ -661,6 +661,7 @@ public class GameplayManager : MonoBehaviour {
                             RemoveDeadMinion(blueMinion.gameObject.name, x, y);
                             IncrementPoints(false, 2);
                             GameplayDataManager.FightHere[x, y] = false;
+                            GameplayDataManager.MinionLocations[x, y] = null;
                             Debug.Log("Red Won");
                         }
                         currentTime = 0.0f;
