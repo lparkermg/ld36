@@ -479,7 +479,7 @@ public class GameplayManager : MonoBehaviour {
     {
         var fightDone = false;
         var currentTime = 0.0f;
-        var timePerRound = 0.25f;
+        var timePerRound = 1f;
         if (GameplayDataManager.FriendlyMinionObjects.ContainsKey(blueName) && GameplayDataManager.EnemyMinionObjects.ContainsKey(redName))
         {
 
@@ -493,8 +493,10 @@ public class GameplayManager : MonoBehaviour {
             {
                 if (currentTime >= timePerRound)
                 {
+
                     if (isBlueRound)
                     {
+                        
                         var dmg = blueMinion.Attack();
                         Debug.Log("Blue dmg: " + dmg);
                         var dead = redMinion.TakeDamage(dmg);

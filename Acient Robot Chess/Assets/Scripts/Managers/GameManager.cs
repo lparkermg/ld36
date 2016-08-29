@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 using Helpers.Filesystem;
 using Entities;
 public class GameManager : Singleton<GameManager> {
@@ -9,6 +10,14 @@ public class GameManager : Singleton<GameManager> {
     //Setting Variables Stuff... (May change to a single class.)
     public float MusicVolume { get; private set; }
     public float SfxVolume { get; private set; }
+
+    public List<AudioClip> BackgroundClips { get; private set; }
+    public List<AudioClip> HitSfxClips { get; private set; }
+    public AudioClip BattleWinSfxClip { get; private set; }
+    public AudioClip BattleLostSfxClip { get; private set; }
+    public AudioClip RoundWinClip { get; private set; }
+    public AudioClip RoundLostClip { get; private set; }
+    public AudioClip RoundDrawClip { get; private set; }
 
     public bool IsDirty { get; private set; }
 
@@ -49,6 +58,35 @@ public class GameManager : Singleton<GameManager> {
     {
         SfxVolume = newVol;
         IsDirty = true;
+    }
+    #endregion
+
+    #region Audio Loading
+    public void PopulateBgmClips(List<AudioClip> audio)
+    {
+        BackgroundClips = audio;
+    }
+    //, AudioClip battleWonSfx, AudioClip battleLostSfx, AudioClip roundWonSfx, AudioClip roundLostSfx, AudioClip roundDrawnSfx
+    public void PopulateSfxClips(List<AudioClip> hitSfx)
+    {
+        HitSfxClips = hitSfx;
+        //BattleWinSfxClip = battleWonSfx;
+        //BattleLostSfxClip = battleLostSfx;
+        //RoundWinClip = roundWonSfx;
+        //RoundLostClip = roundLostSfx;
+        //RoundDrawClip = roundDrawnSfx;
+    }
+
+    public AudioClip GetRandomAudioClip()
+    {
+        var clip = Random.Range(0, BackgroundClips.Count);
+        return BackgroundClips[clip];
+    }
+
+    public AudioClip GetRandomHitSfxClip()
+    {
+        var clip = Random.Range(0, HitSfxClips.Count);
+        return HitSfxClips[clip];
     }
     #endregion
 
