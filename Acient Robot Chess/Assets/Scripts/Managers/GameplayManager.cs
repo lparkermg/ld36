@@ -123,7 +123,7 @@ public class GameplayManager : MonoBehaviour {
         LevelsDone.Add(_levelDataHolder.LastRandomLayout);
         StartCoroutine(LoadLevelTiles());
         StartCoroutine(SpawnMinions());
-        var maxCharge = 0.5f / (float)CurrentRound;
+        var maxCharge = 1.0f / (float)CurrentRound;
         //maxCharge = 0.1f;
         _roundDone = false;
         StartCoroutine(AIProcess(maxCharge));
@@ -705,19 +705,23 @@ public class GameplayManager : MonoBehaviour {
                 }
                 if (names.Count > 0)
                 {
-                    var moved = false;
-                    var retrys = 0;
-                    while (!moved && retrys < 25)
+
+                    var selectedMinionNum = Random.Range(0, names.Count);
+                    var selectedMinionObj = GameplayDataManager.EnemyMinionObjects[names[selectedMinionNum]];
+                    if (selectedMinionObj != null)
                     {
-                        var selectedMinionNum = Random.Range(0, names.Count);
-                        var selectedMinionObj = GameplayDataManager.EnemyMinionObjects[names[selectedMinionNum]];
-                        if (selectedMinionObj != null)
+                        var moved = false;
+                        var valiRetrys = 0;
+                        while (!moved)
                         {
                             var selectedMinion = selectedMinionObj.GetComponent<MinionBot>();
-                            var moveX = Mathf.RoundToInt(Random.Range(-10, 10)/10);
-                            var moveY = Mathf.RoundToInt(Random.Range(-100, 1)/100);
+                            var moveX = Mathf.RoundToInt((Random.Range(-20, 20) + 1) /10);
+                            var moveY = Mathf.RoundToInt((Random.Range(-20, 0) + 1) / 10);
+                            //Stick in a loop with about 25 or so retrys to validate where to move.
                             moved = TryMoveMinion(selectedMinion.X + moveX, selectedMinion.Y + moveY, true, selectedMinion);
-                            retrys++;
+                            valiRetrys++;
+                            if (valiRetrys > 15)
+                                break;
                         }
                     }
                 }
