@@ -1,13 +1,11 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2015
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acient Robot Chess.CSharp.Plugins", "Acient Robot Chess.CSharp.Plugins.csproj", "{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{06934A99-6486-1DD4-4161-C49530C78E23}") = "Acient Robot Chess", "Assembly-CSharp-firstpass.csproj", "{F9F7F6A6-B028-1D59-B9ED-8FFC50B3F91F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acient Robot Chess.CSharp", "Acient Robot Chess.CSharp.csproj", "{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}"
+Project("{06934A99-6486-1DD4-4161-C49530C78E23}") = "Acient Robot Chess", "Assembly-CSharp.csproj", "{3B33B58C-F09B-E8C5-0E29-FAFF6CB7436C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acient Robot Chess.CSharp.Editor.Plugins", "Acient Robot Chess.CSharp.Editor.Plugins.csproj", "{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acient Robot Chess.CSharp.Editor", "Acient Robot Chess.CSharp.Editor.csproj", "{209C7C4F-8F0B-9369-7180-E5A9635CA42D}"
+Project("{06934A99-6486-1DD4-4161-C49530C78E23}") = "Acient Robot Chess", "Assembly-CSharp-Editor-firstpass.csproj", "{9D728888-9DAF-99E3-E948-D134D1D0F150}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,24 +13,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{68F36AE0-B11B-6D94-5DDA-2E6C39CE7D8B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C2F2935-2B5B-E4C5-DEC7-63B2B2D92AF8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5CB274FB-23AE-DF0E-1F5A-0DB226E545B3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{209C7C4F-8F0B-9369-7180-E5A9635CA42D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{209C7C4F-8F0B-9369-7180-E5A9635CA42D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{209C7C4F-8F0B-9369-7180-E5A9635CA42D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{209C7C4F-8F0B-9369-7180-E5A9635CA42D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9F7F6A6-B028-1D59-B9ED-8FFC50B3F91F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9F7F6A6-B028-1D59-B9ED-8FFC50B3F91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9F7F6A6-B028-1D59-B9ED-8FFC50B3F91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9F7F6A6-B028-1D59-B9ED-8FFC50B3F91F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B33B58C-F09B-E8C5-0E29-FAFF6CB7436C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B33B58C-F09B-E8C5-0E29-FAFF6CB7436C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B33B58C-F09B-E8C5-0E29-FAFF6CB7436C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B33B58C-F09B-E8C5-0E29-FAFF6CB7436C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D728888-9DAF-99E3-E948-D134D1D0F150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D728888-9DAF-99E3-E948-D134D1D0F150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D728888-9DAF-99E3-E948-D134D1D0F150}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D728888-9DAF-99E3-E948-D134D1D0F150}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
 	EndGlobalSection
 EndGlobal

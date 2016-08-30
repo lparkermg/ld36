@@ -40,6 +40,10 @@ public class MainMenuManager : MonoBehaviour {
         
     }
 
+	public void ExitGame(){
+		Application.Quit ();
+	}
+
     public void SaveButtonClicked()
     {
         GameManager.Instance.SaveSettings();
